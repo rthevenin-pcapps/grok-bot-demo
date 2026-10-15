@@ -1,8 +1,11 @@
 import http from 'node:http';
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { validateEntry } from './src/validation.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
@@ -39,6 +42,14 @@ function sendJson(res, status, body) {
     'Cache-Control': 'no-store',
   });
   res.end(JSON.stringify(body));
+}
+
+async function readJson(req) {
+  let raw = '';
+  for await (const chunk of req) {
+    raw += chunk;
+  }
+  return raw ? JSON.parse(raw) : {};
 }
 
 function sendNotFound(res) {
@@ -83,6 +94,34 @@ async function handleApi(req, res, pathname) {
 
   if (req.method === 'GET' && pathname === '/api/projects') {
     return sendJson(res, 200, db.projects.map(projectSummary));
+  }
+
+  if (req.method === 'POST' && pathname === '/api/entries') {
+    let input;
+    try {
+      input = await readJson(req);
+    } catch {
+      return sendJson(res, 400, { error: 'Request body must be valid JSON.' });
+    }
+    if (typeof input !== 'object' || input === null) {
+      return sendJson(res, 400, { error: 'Request body must be a JSON object.' });
+    }
+
+    const { valid, errors } = validateEntry(input, db);
+    if (!valid) {
+      return sendJson(res, 422, { error: 'Please fix the highlighted fields.', details: errors });
+    }
+
+    const entry = {
+      id: `e-${randomUUID().slice(0, 8)}`,
+      projectId: input.projectId,
+      userId: input.userId,
+      date: input.date,
+      hours: input.hours,
+      description: input.description.trim(),
+    };
+    db.entries.push(entry);
+    return sendJson(res, 201, entry);
   }
 
   sendJson(res, 404, { error: 'Not found' });

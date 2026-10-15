@@ -20,7 +20,7 @@
     </header>
 
     <main class="layout">
-      <section class="panel panel-wide" aria-labelledby="projects-heading">
+      <section class="panel" aria-labelledby="projects-heading">
         <div class="panel-header">
           <div>
             <h2 id="projects-heading">Projects</h2>
@@ -38,6 +38,37 @@
           </thead>
           <tbody></tbody>
         </table>
+      </section>
+
+      <section class="panel" aria-labelledby="log-time-heading">
+        <div class="panel-header">
+          <div>
+            <h2 id="log-time-heading">Log time</h2>
+            <p class="panel-subtitle">Recorded for the signed-in consultant.</p>
+          </div>
+        </div>
+        <form id="entry-form" class="form">
+          <div class="field">
+            <label for="entry-project">Project</label>
+            <select id="entry-project" name="projectId" required></select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="entry-date">Date</label>
+              <input id="entry-date" name="date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="entry-hours">Hours</label>
+              <input id="entry-hours" name="hours" type="number" step="0.25" placeholder="0.00" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="entry-description">Description</label>
+            <textarea id="entry-description" name="description" maxlength="500" placeholder="What did you work on?" required></textarea>
+          </div>
+          <p id="entry-message" class="form-message" role="status"></p>
+          <button type="submit" class="button">Log time</button>
+        </form>
       </section>
     </main>
     <script type="module" src="/app.js"></script>
