@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { entriesForProject } from './src/timesheet.js';
 import { validateEntry } from './src/validation.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -96,6 +97,18 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, db.projects.map(projectSummary));
   }
 
+  const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
+  if (req.method === 'GET' && projectMatch) {
+    const project = db.projects.find((p) => p.id === decodeURIComponent(projectMatch[1]));
+    if (!project) {
+      return sendJson(res, 404, { error: 'Project not found' });
+    }
+    return sendJson(res, 200, {
+      ...projectSummary(project),
+      entries: entriesForProject(db.entries, project.id),
+    });
+  }
+
   if (req.method === 'POST' && pathname === '/api/entries') {
     let input;
     try {
@@ -109,7 +122,7 @@ async function handleApi(req, res, pathname) {
 
     const { valid, errors } = validateEntry(input, db);
     if (!valid) {
-      return sendJson(res, 422, { error: 'Please fix the highlighted fields.', details: errors });
+      return sendJson(res, 422, { error: 'Entry could not be saved.', details: errors });
     }
 
     const entry = {

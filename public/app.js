@@ -1,8 +1,12 @@
+import { sumHours } from '/src/timesheet.js';
+
 const USER_KEY = 'billable.userId';
 
 const state = {
   users: [],
   projects: [],
+  currentProject: null,
+  currentEntries: [],
 };
 
 const els = {
@@ -15,6 +19,12 @@ const els = {
   entryDescription: document.querySelector('#entry-description'),
   entryMessage: document.querySelector('#entry-message'),
   entrySubmit: document.querySelector('#entry-form button[type="submit"]'),
+  detail: document.querySelector('#project-detail'),
+  detailHeading: document.querySelector('#detail-heading'),
+  detailCode: document.querySelector('#detail-code'),
+  detailRate: document.querySelector('#detail-rate'),
+  entriesBody: document.querySelector('#entries-table tbody'),
+  totalHours: document.querySelector('#total-hours'),
 };
 
 const rateFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
@@ -56,6 +66,10 @@ function currentUserId() {
   return els.userSelect.value;
 }
 
+function userName(id) {
+  return state.users.find((u) => u.id === id)?.name ?? 'Unknown';
+}
+
 function renderUsers() {
   const saved = localStorage.getItem(USER_KEY);
   els.userSelect.innerHTML = state.users
@@ -70,9 +84,11 @@ function renderProjects() {
   els.projectsBody.innerHTML = state.projects
     .map(
       (p) => `
-        <tr data-project-id="${p.id}">
+        <tr data-project-id="${p.id}" class="${p.id === state.currentProject?.id ? 'is-selected' : ''}">
           <td>${escapeHtml(p.client)}</td>
-          <td>${escapeHtml(p.name)}</td>
+          <td>
+            <button type="button" class="link-button" data-open-project="${p.id}">${escapeHtml(p.name)}</button>
+          </td>
           <td class="num">${rateFormat.format(p.hourlyRate)}/hr</td>
           <td class="num">${p.entryCount}</td>
         </tr>`,
@@ -94,6 +110,41 @@ async function loadProjects() {
   state.projects = await api('/api/projects');
   renderProjects();
   renderProjectOptions();
+}
+
+function renderEntries(entries) {
+  if (entries.length === 0) {
+    return '<tr class="empty-row"><td colspan="4">No time logged yet.</td></tr>';
+  }
+  return entries
+    .map(
+      (e) => `
+        <tr>
+          <td>${e.date}</td>
+          <td>${escapeHtml(userName(e.userId))}</td>
+          <td>${escapeHtml(e.description)}</td>
+          <td class="num">${e.hours}</td>
+        </tr>`,
+    )
+    .join('');
+}
+
+function renderDetail() {
+  const project = state.currentProject;
+  els.detailHeading.textContent = projectLabel(project);
+  els.detailCode.textContent = project.code;
+  els.detailRate.textContent = `${rateFormat.format(project.hourlyRate)}/hr`;
+  els.entriesBody.innerHTML = renderEntries(state.currentEntries);
+  els.totalHours.textContent = sumHours(state.currentEntries);
+  els.detail.hidden = false;
+}
+
+async function openProject(projectId) {
+  const { entries, ...project } = await api(`/api/projects/${encodeURIComponent(projectId)}`);
+  state.currentProject = project;
+  state.currentEntries = entries;
+  renderDetail();
+  renderProjects();
 }
 
 function showEntryMessage(kind, text) {
@@ -135,6 +186,20 @@ els.entryForm.addEventListener('submit', async (event) => {
   els.entryHours.value = '';
   els.entryDescription.value = '';
   await loadProjects();
+  if (state.currentProject?.id === entry.projectId) {
+    await openProject(entry.projectId);
+  }
+});
+
+els.projectsBody.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-open-project]');
+  if (!button) {
+    return;
+  }
+  const projectId = button.dataset.openProject;
+  els.entryProject.value = projectId;
+  await openProject(projectId);
+  els.detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 els.userSelect.addEventListener('change', () => {
