@@ -1,0 +1,85 @@
+import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const PORT = Number(process.env.PORT) || 3000;
+
+const STATIC_DIRS = [
+  ['/src/', path.join(ROOT, 'src')],
+  ['/', path.join(ROOT, 'public')],
+];
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+};
+
+function sendJson(res, status, body) {
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+  res.end(JSON.stringify(body));
+}
+
+function sendNotFound(res) {
+  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Not found');
+}
+
+async function serveStatic(res, pathname) {
+  const [prefix, dir] = STATIC_DIRS.find(([p]) => pathname.startsWith(p));
+  let relative;
+  try {
+    relative = decodeURIComponent(pathname.slice(prefix.length)) || 'index.html';
+  } catch {
+    return sendNotFound(res);
+  }
+
+  const filePath = path.join(dir, relative);
+  if (!filePath.startsWith(dir + path.sep)) {
+    return sendNotFound(res);
+  }
+
+  try {
+    const data = await readFile(filePath);
+    res.writeHead(200, {
+      'Content-Type': MIME_TYPES[path.extname(filePath)] ?? 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    });
+    res.end(data);
+  } catch {
+    sendNotFound(res);
+  }
+}
+
+async function handleApi(req, res, pathname) {
+  if (req.method === 'GET' && pathname === '/api/health') {
+    return sendJson(res, 200, { ok: true });
+  }
+
+  sendJson(res, 404, { error: 'Not found' });
+}
+
+const server = http.createServer(async (req, res) => {
+  const { pathname } = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+
+  if (pathname.startsWith('/api/')) {
+    return handleApi(req, res, pathname);
+  }
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    return res.end('Method not allowed');
+  }
+  return serveStatic(res, pathname);
+});
+
+server.listen(PORT, () => {
+  console.log(`Billable running at http://localhost:${PORT}`);
+});
