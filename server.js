@@ -1,10 +1,23 @@
 import http from 'node:http';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
+const SEED_PATH = path.join(ROOT, 'data', 'seed.json');
+
+let db;
+
+function loadSeed() {
+  db = JSON.parse(readFileSync(SEED_PATH, 'utf8'));
+}
+
+function projectSummary(project) {
+  const entryCount = db.entries.filter((e) => e.projectId === project.id).length;
+  return { ...project, entryCount };
+}
 
 const STATIC_DIRS = [
   ['/src/', path.join(ROOT, 'src')],
@@ -64,8 +77,18 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { ok: true });
   }
 
+  if (req.method === 'GET' && pathname === '/api/users') {
+    return sendJson(res, 200, db.users);
+  }
+
+  if (req.method === 'GET' && pathname === '/api/projects') {
+    return sendJson(res, 200, db.projects.map(projectSummary));
+  }
+
   sendJson(res, 404, { error: 'Not found' });
 }
+
+loadSeed();
 
 const server = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);

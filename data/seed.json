@@ -1,0 +1,127 @@
+{
+  "users": [
+    { "id": "u-priya", "name": "Priya Shah", "title": "Senior Consultant" },
+    { "id": "u-marcus", "name": "Marcus Lee", "title": "Consultant" },
+    { "id": "u-dana", "name": "Dana Okafor", "title": "Engagement Manager" }
+  ],
+  "projects": [
+    {
+      "id": "p-globex-portal",
+      "code": "GLBX-PORTAL",
+      "client": "Globex",
+      "name": "Customer Portal Redesign",
+      "hourlyRate": 150
+    },
+    {
+      "id": "p-initech-audit",
+      "code": "INIT-AUDIT",
+      "client": "Initech",
+      "name": "Security Audit",
+      "hourlyRate": 195
+    },
+    {
+      "id": "p-northwind-api",
+      "code": "NWND-API",
+      "client": "Northwind",
+      "name": "API Migration",
+      "hourlyRate": 160
+    },
+    {
+      "id": "p-acme-discovery",
+      "code": "ACME-DISC",
+      "client": "Acme Corp",
+      "name": "Discovery Phase",
+      "hourlyRate": 175
+    }
+  ],
+  "entries": [
+    {
+      "id": "e-1001",
+      "projectId": "p-globex-portal",
+      "userId": "u-priya",
+      "date": "2026-09-21",
+      "hours": 6,
+      "description": "Stakeholder interviews and current-state review"
+    },
+    {
+      "id": "e-1002",
+      "projectId": "p-globex-portal",
+      "userId": "u-marcus",
+      "date": "2026-09-22",
+      "hours": 4.5,
+      "description": "Wireframes for account dashboard"
+    },
+    {
+      "id": "e-1003",
+      "projectId": "p-globex-portal",
+      "userId": "u-marcus",
+      "date": "2026-09-24",
+      "hours": 7.25,
+      "description": "Component library audit"
+    },
+    {
+      "id": "e-1004",
+      "projectId": "p-globex-portal",
+      "userId": "u-priya",
+      "date": "2026-09-28",
+      "hours": 3.75,
+      "description": "Design review with client product team"
+    },
+    {
+      "id": "e-1005",
+      "projectId": "p-globex-portal",
+      "userId": "u-dana",
+      "date": "2026-10-01",
+      "hours": 1.5,
+      "description": "Weekly status call and notes"
+    },
+    {
+      "id": "e-1006",
+      "projectId": "p-initech-audit",
+      "userId": "u-dana",
+      "date": "2026-09-29",
+      "hours": 2,
+      "description": "Kickoff and scoping"
+    },
+    {
+      "id": "e-1007",
+      "projectId": "p-initech-audit",
+      "userId": "u-priya",
+      "date": "2026-09-30",
+      "hours": 5.5,
+      "description": "External attack surface review"
+    },
+    {
+      "id": "e-1008",
+      "projectId": "p-initech-audit",
+      "userId": "u-priya",
+      "date": "2026-10-02",
+      "hours": 6.75,
+      "description": "IAM policy review"
+    },
+    {
+      "id": "e-1009",
+      "projectId": "p-initech-audit",
+      "userId": "u-marcus",
+      "date": "2026-10-06",
+      "hours": 3,
+      "description": "Findings write-up, first draft"
+    },
+    {
+      "id": "e-1010",
+      "projectId": "p-northwind-api",
+      "userId": "u-marcus",
+      "date": "2026-10-05",
+      "hours": 1.1,
+      "description": "Endpoint inventory for legacy order service"
+    },
+    {
+      "id": "e-1011",
+      "projectId": "p-northwind-api",
+      "userId": "u-marcus",
+      "date": "2026-10-07",
+      "hours": 2.2,
+      "description": "Auth token migration spike"
+    }
+  ]
+}

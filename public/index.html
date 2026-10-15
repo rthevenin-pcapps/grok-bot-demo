@@ -13,13 +13,33 @@
         Billable
         <span class="brand-tag">Timesheets &amp; invoicing</span>
       </div>
+      <label class="signed-in">
+        Signed in as
+        <select id="user-select" aria-label="Signed in as"></select>
+      </label>
     </header>
 
     <main class="layout">
-      <section class="panel panel-wide">
-        <h2>Projects</h2>
-        <p class="panel-subtitle">Nothing here yet.</p>
+      <section class="panel panel-wide" aria-labelledby="projects-heading">
+        <div class="panel-header">
+          <div>
+            <h2 id="projects-heading">Projects</h2>
+            <p class="panel-subtitle">Active client engagements and billing rates.</p>
+          </div>
+        </div>
+        <table id="projects-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Project</th>
+              <th class="num">Hourly rate</th>
+              <th class="num">Entries</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </section>
     </main>
+    <script type="module" src="/app.js"></script>
   </body>
 </html>
