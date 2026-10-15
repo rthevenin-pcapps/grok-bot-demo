@@ -109,6 +109,11 @@ async function handleApi(req, res, pathname) {
     });
   }
 
+  if (req.method === 'POST' && pathname === '/api/reset') {
+    loadSeed();
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method === 'POST' && pathname === '/api/entries') {
     let input;
     try {
