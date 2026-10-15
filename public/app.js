@@ -1,3 +1,4 @@
+import { buildInvoice, formatCurrency } from '/src/invoice.js';
 import { sumHours } from '/src/timesheet.js';
 
 const USER_KEY = 'billable.userId';
@@ -25,9 +26,11 @@ const els = {
   detailRate: document.querySelector('#detail-rate'),
   entriesBody: document.querySelector('#entries-table tbody'),
   totalHours: document.querySelector('#total-hours'),
+  generateInvoice: document.querySelector('#generate-invoice'),
+  invoice: document.querySelector('#invoice'),
+  invoiceBody: document.querySelector('#invoice-body'),
+  closeInvoice: document.querySelector('#close-invoice'),
 };
-
-const rateFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -89,7 +92,7 @@ function renderProjects() {
           <td>
             <button type="button" class="link-button" data-open-project="${p.id}">${escapeHtml(p.name)}</button>
           </td>
-          <td class="num">${rateFormat.format(p.hourlyRate)}/hr</td>
+          <td class="num">${formatCurrency(p.hourlyRate)}/hr</td>
           <td class="num">${p.entryCount}</td>
         </tr>`,
     )
@@ -133,10 +136,68 @@ function renderDetail() {
   const project = state.currentProject;
   els.detailHeading.textContent = projectLabel(project);
   els.detailCode.textContent = project.code;
-  els.detailRate.textContent = `${rateFormat.format(project.hourlyRate)}/hr`;
+  els.detailRate.textContent = `${formatCurrency(project.hourlyRate)}/hr`;
   els.entriesBody.innerHTML = renderEntries(state.currentEntries);
   els.totalHours.textContent = sumHours(state.currentEntries);
   els.detail.hidden = false;
+  hideInvoice();
+}
+
+function renderInvoice(invoice) {
+  const lines = invoice.lineItems
+    .map(
+      (item) => `
+        <tr>
+          <td>${item.date}</td>
+          <td>${escapeHtml(userName(item.userId))}</td>
+          <td>${escapeHtml(item.description)}</td>
+          <td class="num">${item.hours}</td>
+          <td class="num">${formatCurrency(item.rate)}</td>
+          <td class="num">${formatCurrency(item.amount)}</td>
+        </tr>`,
+    )
+    .join('');
+
+  return `
+    <dl class="invoice-head">
+      <div><dt>Invoice no.</dt><dd>${escapeHtml(invoice.number)}</dd></div>
+      <div><dt>Bill to</dt><dd>${escapeHtml(invoice.client)}</dd></div>
+      <div><dt>Project</dt><dd>${escapeHtml(invoice.project)}</dd></div>
+      <div><dt>Issued</dt><dd>${invoice.issuedOn}</dd></div>
+    </dl>
+    <table class="invoice-lines">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Consultant</th>
+          <th>Description</th>
+          <th class="num">Hours</th>
+          <th class="num">Rate</th>
+          <th class="num">Amount</th>
+        </tr>
+      </thead>
+      <tbody>${lines}</tbody>
+    </table>
+    <table class="invoice-totals">
+      <tbody>
+        <tr><td>Subtotal</td><td class="num">${formatCurrency(invoice.subtotal)}</td></tr>
+        <tr><td>Tax (${invoice.taxRate * 100}%)</td><td class="num">${formatCurrency(invoice.tax)}</td></tr>
+        <tr class="grand-total"><td>Total due</td><td class="num">${formatCurrency(invoice.total)}</td></tr>
+      </tbody>
+    </table>`;
+}
+
+function showInvoice() {
+  els.invoice.hidden = false;
+  els.invoiceBody.innerHTML = '';
+  const invoice = buildInvoice(state.currentProject, state.currentEntries, { issuedOn: todayIso() });
+  els.invoiceBody.innerHTML = renderInvoice(invoice);
+  els.invoice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideInvoice() {
+  els.invoice.hidden = true;
+  els.invoiceBody.innerHTML = '';
 }
 
 async function openProject(projectId) {
@@ -201,6 +262,9 @@ els.projectsBody.addEventListener('click', async (event) => {
   await openProject(projectId);
   els.detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
+
+els.generateInvoice.addEventListener('click', showInvoice);
+els.closeInvoice.addEventListener('click', hideInvoice);
 
 els.userSelect.addEventListener('change', () => {
   localStorage.setItem(USER_KEY, currentUserId());

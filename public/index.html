@@ -80,6 +80,7 @@
               <span>Rate <strong id="detail-rate"></strong></span>
             </div>
           </div>
+          <button type="button" id="generate-invoice" class="button">Generate invoice</button>
         </div>
         <table id="entries-table">
           <thead>
@@ -93,6 +94,14 @@
           <tbody></tbody>
         </table>
         <p class="total-hours">Total hours: <strong id="total-hours"></strong></p>
+
+        <section id="invoice" class="invoice" aria-labelledby="invoice-heading" hidden>
+          <div class="invoice-titlebar">
+            <h3 id="invoice-heading">Invoice</h3>
+            <button type="button" id="close-invoice" class="button button-secondary">Close</button>
+          </div>
+          <div id="invoice-body" class="invoice-body"></div>
+        </section>
       </section>
     </main>
     <script type="module" src="/app.js"></script>
